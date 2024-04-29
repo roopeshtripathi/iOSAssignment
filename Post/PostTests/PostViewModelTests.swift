@@ -25,17 +25,26 @@ class PostViewModelTests: XCTestCase {
     
     func testFetchPostsSuccess() {
         // Given
-        let expectedPosts = [Post(id: 1, title: "Title 1"),
-                             Post(id: 2, title: "Title 2")]
+        let expectedPosts = [Post(id: 1, title: "Title 1"), Post(id: 2, title: "Title 2")]
         mockNetworkManager.stubbedData = expectedPosts
         
         // When
         viewModel.fetchPosts()
         
         // Then
-        XCTAssertEqual(viewModel.posts, expectedPosts)
+        XCTAssertTrue(viewModel.isLoading)
+        XCTAssertTrue(viewModel.posts.isEmpty)
+        
+        let expectation = XCTestExpectation(description: "Wait for fetch to complete")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 5)
+        
+        XCTAssertFalse(viewModel.isLoading)
+        XCTAssertEqual(viewModel.posts, expectedPosts) 
     }
-    
+
     func testFetchPostsFailure() {
         // Given
         mockNetworkManager.stubbedError = URLError(.notConnectedToInternet)
